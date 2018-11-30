@@ -1,0 +1,41 @@
+#!/bin/bash
+function install_vim_plugin_submodules() {
+  export VIM_DIR=`readlink -f $HOME/.vim`
+  export BUNDLE_ROOT="${VIM_DIR}/bundle"
+  declare -A GIT_CLONE_HASH=(\
+    ["https://github.com/beautify-web/js-beautify"]="js-beautify"\
+    ["https://github.com/scrooloose/nerdtree.git"]="nerdtree"\
+    ["git://github.com/rodjek/vim-puppet.git"]="puppet"\
+    ["https://github.com/scrooloose/syntastic"]="syntastic"\
+    ["https://github.com/maksimr/vim-jsbeautify.git"]="vim-jsbeautify"\
+    ["https://github.com/jistr/vim-nerdtree-tabs"]="vim-nerdtree-tabs"\
+    ["https://github.com/aquach/vim-mediawiki-editor"]="vim-mediawiki-editor"\
+    ["https://github.com/Valloric/YouCompleteMe/"]="YouCompleteMe"\
+    ["https://github.com/ross/requests-futures"]="YouCompleteMe/third_party/requests-futures"\
+    ["https://github.com/Valloric/ycmd"]="YouCompleteMe/third_party/ycmd"\
+    ["https://github.com/nosami/OmniSharpServer"]="YouCompleteMe/third_party/OmniSharpServer"\
+    ["https://github.com/bewest/argparse"]="YouCompleteMe/third_party/argparse"\
+    ["https://github.com/defnull/bottle"]="YouCompleteMe/third_party/bottle"\
+    ["https://github.com/slezica/python-frozendict"]="YouCompleteMe/third_party/frozendict"\
+    ["https://github.com/Pylons/waitress"]="YouCompleteMe/third_party/waitress"\
+    ["https://github.com/kennethreitz/requests"]="YouCompleteMe/third_party/requests"\
+    ["https://github.com/nsf/gocode.git"]="YouCompleteMe/third_party/gocode"\
+    ["https://github.com/vheon/JediHTTP"]="YouCompleteMe/third_party/JediHTTP"\
+    ["https://github.com/jwilm/racerd"]="YouCompleteMe/third_party/racerd"\
+    ["https://github.com/Manishearth/godef.git"]="YouCompleteMe/third_party/godef"\
+    ["https://github.com/PythonCharmers/python-future"]="YouCompleteMe/third_party/python-future"\
+    ["https://github.com/vim-airline/vim-airline"]="vim-airline"\
+    ["https://github.com/vim-airline/vim-airline-themes"]="vim-airline-themes"\
+    ["https://github.com/rlofc/vorg"]="vorg"\
+    ["https://github.com/sirver/ultisnips"]="ultisnips"\
+    ["https://github.com/honza/vim-snippets"]="vim-snippets"\
+    ["https://github.com/flazz/vim-colorschemes"]="vim-colorschemes"
+  );
+  for REPO_URL in "${!GIT_CLONE_HASH[@]}"; do {
+    GIT_REPO_DESTINATION=${GIT_CLONE_HASH["$REPO_URL"]};
+    git clone $REPO_URL 'bundle/'$GIT_REPO_DESTINATION
+    git submodule add $REPO_URL 'bundle/'$GIT_REPO_DESTINATION
+  }; done;
+}
+install_vim_plugin_submodules && git submodule init && git submodule update
+git submodule update --init --recursive

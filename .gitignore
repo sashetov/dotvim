@@ -1,0 +1,4 @@
+.*.sw*
+ycm_core
+swapfiles/
+backup

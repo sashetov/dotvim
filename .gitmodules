@@ -1,0 +1,88 @@
+[submodule "nerdtree"]
+  path='bundle/nerdtree'
+  url='https://github.com/scrooloose/nerdtree.git'
+[submodule "vim-jsbeautify"]
+  path = bundle/vim-jsbeautify
+  url = https://github.com/maksimr/vim-jsbeautify.git
+[submodule "puppet"]
+  path = bundle/puppet
+  url = git://github.com/rodjek/vim-puppet.git
+[submodule "nerdtree"]
+  path = bundle/nerdtree
+  url = https://github.com/scrooloose/nerdtree.git
+[submodule "js-beautify"]
+  path = bundle/js-beautify
+  url = https://github.com/beautify-web/js-beautify
+[submodule "vim-nerdtree-tabs"]
+  path = bundle/vim-nerdtree-tabs
+  url = https://github.com/jistr/vim-nerdtree-tabs
+[submodule "syntastic"]
+  path = bundle/syntastic
+  url = https://github.com/scrooloose/syntastic
+[submodule "bundle/vim-mediawiki-editor"]
+  path = bundle/vim-mediawiki-editor
+  url = https://github.com/aquach/vim-mediawiki-editor
+[submodule "bundle/YouCompleteMe"]
+  path = bundle/YouCompleteMe
+  url = https://github.com/Valloric/YouCompleteMe/
+[submodule "bundle/YouCompleteMe/third_party/requests-futures"]
+  path = bundle/YouCompleteMe/third_party/requests-futures
+  url = https://github.com/ross/requests-futures
+[submodule "bundle/YouCompleteMe/third_party/ycmd"]
+  path = bundle/YouCompleteMe/third_party/ycmd
+  url = https://github.com/Valloric/ycmd
+[submodule "bundle/YouCompleteMe/third_party/OmniSharpServer"]
+  path = bundle/YouCompleteMe/third_party/OmniSharpServer
+  url = https://github.com/nosami/OmniSharpServer
+[submodule "bundle/YouCompleteMe/third_party/argparse"]
+  path = bundle/YouCompleteMe/third_party/argparse
+  url = https://github.com/bewest/argparse
+[submodule "bundle/YouCompleteMe/third_party/bottle"]
+  path = bundle/YouCompleteMe/third_party/bottle
+  url = https://github.com/defnull/bottle
+[submodule "bundle/YouCompleteMe/third_party/frozendict"]
+  path = bundle/YouCompleteMe/third_party/frozendict
+  url = https://github.com/slezica/python-frozendict
+[submodule "bundle/YouCompleteMe/third_party/waitress"]
+  path = bundle/YouCompleteMe/third_party/waitress
+  url = https://github.com/Pylons/waitress
+[submodule "bundle/YouCompleteMe/third_party/requests"]
+  path = bundle/YouCompleteMe/third_party/requests
+  url = https://github.com/kennethreitz/requests
+[submodule "bundle/YouCompleteMe/third_party/gocode"]
+  path = bundle/YouCompleteMe/third_party/gocode
+  url = https://github.com/nsf/gocode.git
+[submodule "bundle/YouCompleteMe/third_party/JediHTTP"]
+  path = bundle/YouCompleteMe/third_party/JediHTTP
+  url = https://github.com/vheon/JediHTTP
+[submodule "bundle/YouCompleteMe/third_party/racerd"]
+  path = bundle/YouCompleteMe/third_party/racerd
+  url = https://github.com/jwilm/racerd
+[submodule "bundle/YouCompleteMe/third_party/godef"]
+  path = bundle/YouCompleteMe/third_party/godef
+  url = https://github.com/Manishearth/godef.git
+  ignore = dirty
+[submodule "bundle/YouCompleteMe/third_party/python-future"]
+  path = bundle/YouCompleteMe/third_party/python-future
+  url = https://github.com/PythonCharmers/python-future
+[submodule "bundle/YouCompleteMe/third_party/gocode"]
+  path = bundle/YouCompleteMe/third_party/gocode
+  url = https://github.com/nsf/gocode.git
+[submodule "bundle/YouCompleteMe/third_party/waitress"]
+  path = bundle/YouCompleteMe/third_party/waitress
+  url = https://github.com/Pylons/waitress
+[submodule "bundle/vim-airline-themes"]
+  path = bundle/vim-airline-themes
+  url = https://github.com/vim-airline/vim-airline-themes
+[submodule "bundle/vorg"]
+  path = bundle/vorg
+  url = https://github.com/rlofc/vorg
+[submodule "bundle/ultisnips"]
+  path = bundle/ultisnips
+  url = https://github.com/sirver/ultisnips
+[submodule "bundle/vim-snippets"]
+  path = bundle/vim-snippets
+  url = https://github.com/honza/vim-snippets
+[submodule "bundle/vim-colorschemes"]
+  path = bundle/vim-colorschemes
+  url = https://github.com/flazz/vim-colorschemes

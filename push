@@ -1,0 +1,3 @@
+#!/bin/bash
+git push origin dotvim-sasheto@lt430
+git push origin HEAD:home-sasheto
