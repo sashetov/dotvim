@@ -41,7 +41,7 @@ endf
 fun! DoManualFolds()
   set nofoldenable
   set foldenable
-  setglobal foldcolumn=1
+  set foldcolumn=1
   let g:foldColumn=1
   set foldmethod=manual
 endf
@@ -208,12 +208,12 @@ map <F3> :call DoManualFolds()<CR>
 vnoremap <buffer> <c-f> :call RangeJsBeautify()<cr>
 "DISPLAY OPTS: SET nu,cc,nowrap,list,expandtab,tabstop,shiftwidth,nocindent,nosmartindent,noautoindent,filetype indent on
 set nu
-set cc=160
+set cc=80
 set nowrap
 set list
 set expandtab
-set tabstop=2
-set shiftwidth=2
+set tabstop=4
+set shiftwidth=4
 set nocindent
 set nosmartindent
 set noautoindent
@@ -254,7 +254,10 @@ set directory=$HOME/.vim/swapfiles/
 "EXECUTE pathogen#infect IF empty LET $MANWIDTH g:ft_man_folding_enable RUNTIME ftplugin/man.vim :CALL InitStatusLine DoManualFolds
 execute pathogen#infect()
 "COLORSCHEME
-colorscheme 256-grayvim
+colorscheme darkblack
+colorscheme sasho
+"PYTHON interpreter
+let g:syntastic_python_python_exec = 'python3'
 "MANPAGER
 if empty($MANWIDTH)
   let $MANWIDTH = 460

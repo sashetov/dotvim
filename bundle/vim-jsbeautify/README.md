@@ -1,12 +1,12 @@
-## vim-jsbeautify - v1.1.2 - 2016-06-05
+## vim-jsbeautify - v1.1.3 - 2018-01-31
 
 [![Build Status](https://secure.travis-ci.org/maksimr/vim-jsbeautify.png)](http://travis-ci.org/maksimr/vim-jsbeautify)
 
 ## Description
 
-This extension allows you to use [jsbeautifier] (http://jsbeautifier.org/)
+This extension allows you to use [jsbeautifier](http://jsbeautifier.org/)
 inside vim to quickly format javascript, html and css files.
-Version 1.0 also supports the [editorconfig] (http://editorconfig.org/) file.
+Version 1.0 also supports the [editorconfig](http://editorconfig.org/) file.
 
 Any comments, corrections and suggestions are welcome.
 
@@ -14,13 +14,13 @@ Any comments, corrections and suggestions are welcome.
 
 ### Dependencies
 
-* A javascript interpreter: [nodejs] (http://nodejs.org/) or [v8] (http://code.google.com/p/v8/).
+* A javascript interpreter: [nodejs](http://nodejs.org/) or [v8](http://code.google.com/p/v8/).
 * [js-beautify](https://github.com/beautify-web/js-beautify)
 * Optional: [editorconfig-vim](https://github.com/editorconfig/editorconfig-vim)
 
 ### Installing without plugin-manager
 
-Download zip [file] (https://github.com/maksimr/vim-jsbeautify/archive/master.zip)
+Download zip [file](https://github.com/maksimr/vim-jsbeautify/archive/master.zip)
 or clone project. Then copy `plugin` folder from the plugin's directory to your `~/.vim` folder.
 
 ``` bash
@@ -31,7 +31,7 @@ cp -r plugin ~/.vim/
 
 Then download the zip file for [js-beautify](https://github.com/beautify-web/js-beautify/archive/master.zip) and place its contents in `~/.vim/plugin/lib/`, ie:
 ```bash
-wget https://github.com/beautify-web/js-beautify/archive/master.zip && unzip master.zip && cp -rf js-beautify-master/ ~/.vim/plugin/lib/
+wget https://github.com/beautify-web/js-beautify/archive/v1.8.9.zip && unzip v1.8.9.zip && cp -rf js-beautify-1.8.9/ ~/.vim/plugin/lib/
 ```
 
 ### Installing using pathogen
@@ -173,25 +173,12 @@ autocmd FileType css vnoremap <buffer> <c-f> :call RangeCSSBeautify()<cr>
 
 ## Running tests
 
-Tests are written in [Urchin](https://github.com/tlevine/urchin) for vim files and built using [Grunt](https://github.com/gruntjs/grunt) test runer for javascript files.
-Note that all the commands bellow you should run from the plugin directory.
+```
+npm install
+bundle install
+npm test
+```
 
-Run vim tests with urchin:
-
-    ./urchin test/vim
-
-(Or put it some other place in your PATH.)
-
-How to run vim and javascript tests with [grunt](https://github.com/gruntjs/grunt):
-
-    npm install -g grunt-cli
-    npm install
-
-    grunt test
-
-Run only javascript tests:
-
-    grunt nodeunit
 
 
 Thanks for assistance:
@@ -203,6 +190,9 @@ Thanks for assistance:
 
 ## Versions
 
+v1.1.3
+  + Add support js-beautify v1.7.5
+
 v1.1.2
   + Add support js-beautify v1.6.3
 
@@ -212,4 +202,4 @@ v1.1.1
 ## License
 
 Licensed MIT
-Copyright (c) 2016 Maksim Ryzhikov;
+Copyright (c) 2018 Maksim Ryzhikov;

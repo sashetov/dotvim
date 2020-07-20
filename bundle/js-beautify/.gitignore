@@ -4,10 +4,18 @@ gh-pages
 gh
 
 *.pyc
+python/*/__pycache__
 python/MANIFEST
 python/build
 python/dist
 python/jsbeautifier.egg-info
+python/cssbeautifier.egg-info
+.nvmrc
+.nvm/
 
 target
+dist/
+build/
+js/lib/
 .idea/
+.vscode/

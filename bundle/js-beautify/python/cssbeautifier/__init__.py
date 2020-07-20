@@ -1,13 +1,7 @@
-from __future__ import print_function
-import sys
-import re
-import copy
-from cssbeautifier.__version__ import __version__
-
 #
 # The MIT License (MIT)
 
-# Copyright (c) 2007-2017 Einar Lielmanis, Liam Newman, and contributors.
+# Copyright (c) 2007-2018 Einar Lielmanis, Liam Newman, and contributors.
 
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
@@ -29,51 +23,17 @@ from cssbeautifier.__version__ import __version__
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-
-class BeautifierOptions:
-    def __init__(self):
-        self.indent_size = 4
-        self.indent_char = ' '
-        self.indent_with_tabs = False
-        self.preserve_newlines = False
-        self.selector_separator_newline = True
-        self.end_with_newline = False
-        self.newline_between_rules = True
-        self.space_around_combinator = False
-        self.eol = 'auto'
-
-        self.css = None
-        self.js = None
-        self.html = None
-
-        # deprecated
-        self.space_around_selector_separator = False
-
-    def mergeOpts(self, targetType):
-        finalOpts = copy.copy(self)
-
-        local = getattr(finalOpts, targetType)
-        if (local):
-            delattr(finalOpts, targetType)
-            for key in local:
-                setattr(finalOpts, key, local[key])
-
-        return finalOpts
-
-
-    def __repr__(self):
-        return \
-"""indent_size = %d
-indent_char = [%s]
-indent_with_tabs = [%s]
-preserve_newlines = [%s]
-separate_selectors_newline = [%s]
-end_with_newline = [%s]
-newline_between_rules = [%s]
-space_around_combinator = [%s]
-""" % (self.indent_size, self.indent_char, self.indent_with_tabs, self.preserve_newlines,
-    self.selector_separator_newline, self.end_with_newline, self.newline_between_rules,
-    self.space_around_combinator)
+from __future__ import print_function
+import sys
+import os
+import io
+import re
+import copy
+import getopt
+from jsbeautifier.__version__ import __version__
+from jsbeautifier import isFileDifferent, mkdir_p
+from cssbeautifier.css.options import BeautifierOptions
+from cssbeautifier.css.beautifier import Beautifier
 
 
 def default_options():
@@ -86,454 +46,187 @@ def beautify(string, opts=default_options()):
 
 
 def beautify_file(file_name, opts=default_options()):
-    if file_name == '-':  # stdin
-        stream = sys.stdin
+    if file_name == "-":  # stdin
+        try:
+            if sys.stdin.isatty():
+                raise Exception()
+
+            stream = sys.stdin
+        except Exception:
+            print("Must pipe input or define input file.\n", file=sys.stderr)
+            usage(sys.stderr)
+            raise Exception()
     else:
         stream = open(file_name)
-    content = ''.join(stream.readlines())
+
+    content = "".join(stream.readlines())
     b = Beautifier(content, opts)
     return b.beautify()
 
 
 def usage(stream=sys.stdout):
 
-    print("cssbeautifier.py@" + __version__ + """
+    print(
+        "cssbeautifier.py@"
+        + __version__
+        + """
 
-CSS beautifier (http://jsbeautifier.org/)
+CSS beautifier (https://beautifier.io/)
 
-""", file=stream)
+Usage: cssbeautifier.py [options] <infile>
+
+    <infile> can be "-", which means stdin.
+
+Input options:
+
+ -i,  --stdin                      Read input from stdin
+
+Output options:
+
+ -s,  --indent-size=NUMBER         Indentation size. (default 4).
+ -c,  --indent-char=CHAR           Character to indent with. (default space).
+ -e,  --eol=STRING                 Character(s) to use as line terminators.
+                                   (default first newline in file, otherwise "\\n")
+ -t,  --indent-with-tabs           Indent with tabs, overrides -s and -c
+      --preserve-newlines          Preserve existing line breaks.
+      --disable-selector-separator-newline
+                                   Do not print each selector on a separate line.
+ -b,  --brace-style=collapse       Brace style (collapse, expand)
+ -n,  --end-with-newline           End output with newline
+      --disable-newline-between-rules
+                                   Do not print empty line between rules.
+      --space-around-combinator    Print spaces around combinator.
+      --indent-empty-lines         Keep indentation on empty lines
+ -r,  --replace                    Write output in-place, replacing input
+ -o,  --outfile=FILE               Specify a file to output to (default stdout)
+
+Rarely needed options:
+
+ -h,  --help, --usage              Prints this help statement.
+ -v,  --version                    Show the version
+
+""",
+        file=stream,
+    )
     if stream == sys.stderr:
         return 1
     else:
         return 0
 
-WHITE_RE = re.compile("^\s+$")
-WORD_RE = re.compile("[\w$\-_]")
 
+def main():
 
-class Printer:
+    argv = sys.argv[1:]
 
-    def __init__(self, beautifier, indent_char, indent_size, default_indent=""):
-        self.beautifier = beautifier
-        self.newlines_from_last_ws_eat = 0
-        self.indentSize = indent_size
-        self.singleIndent = (indent_size) * indent_char
-        self.indentLevel = 0
-        self.nestedLevel = 0
+    try:
+        opts, args = getopt.getopt(
+            argv,
+            "hvio:rs:c:e:tnb:",
+            [
+                "help",
+                "usage",
+                "version",
+                "stdin",
+                "outfile=",
+                "replace",
+                "indent-size=",
+                "indent-char=",
+                "eol=",
+                "indent-with-tabs",
+                "preserve-newlines",
+                "brace-style=",
+                "disable-selector-separator-newline",
+                "end-with-newline",
+                "disable-newline-between-rules",
+                "space-around-combinator",
+                "indent-empty-lines",
+            ],
+        )
+    except getopt.GetoptError as ex:
+        print(ex, file=sys.stderr)
+        return usage(sys.stderr)
 
-        self.baseIndentString = default_indent
-        self.output = []
+    css_options = default_options()
 
-    def __lastCharWhitespace(self):
-        return len(self.output) > 0 and WHITE_RE.search(self.output[-1]) is not None
+    file = None
+    outfile = "stdout"
+    replace = False
+    if len(args) == 1:
+        file = args[0]
 
-    def indent(self):
-        self.indentLevel += 1
-        self.baseIndentString += self.singleIndent
+    for opt, arg in opts:
+        if opt in ("--stdin", "-i"):
+            file = "-"
+        elif opt in ("--outfile", "-o"):
+            outfile = arg
+        elif opt in ("--replace", "-r"):
+            replace = True
+        elif opt in ("--version", "-v"):
+            return print(__version__)
+        elif opt in ("--help", "--usage", "-h"):
+            return usage()
 
-    def outdent(self):
-        if self.indentLevel:
-            self.indentLevel -= 1
-            self.baseIndentString = self.baseIndentString[:-(len(self.singleIndent))]
+        elif opt in ("--indent-size", "-s"):
+            css_options.indent_size = int(arg)
+        elif opt in ("--indent-char", "-c"):
+            css_options.indent_char = arg
+        elif opt in ("--eol", "-e"):
+            css_options.eol = arg
+        elif opt in ("--indent-with-tabs", "-t"):
+            css_options.indent_with_tabs = True
+        elif opt in ("--preserve-newlines"):
+            css_options.preserve_newlines = True
+        elif opt in ("--disable-selector-separator-newline"):
+            css_options.selector_separator_newline = False
+        elif opt in ("--brace-style", "-b"):
+            css_options.brace_style = arg
+        elif opt in ("--end-with-newline", "-n"):
+            css_options.end_with_newline = True
+        elif opt in ("--disable-newline-between-rules"):
+            css_options.newline_between_rules = False
+        elif opt in ("--space-around-combinator"):
+            css_options.space_around_combinator = True
+        elif opt in ("--indent-empty-lines"):
+            css_options.indent_empty_lines = True
 
-    def push(self, string):
-        self.output.append(string)
+    if not file:
+        file = "-"
 
-    def openBracket(self):
-        self.singleSpace()
-        self.output.append("{")
-        if self.beautifier.eatWhitespace(True) == 0:
-            self.newLine()
+    try:
+        if outfile == "stdout" and replace and not file == "-":
+            outfile = file
 
-    def closeBracket(self,newLine):
-        if newLine:
-            self.newLine()
-        self.output.append("}")
-        self.beautifier.eatWhitespace(True)
-        if self.beautifier.newlines_from_last_ws_eat == 0:
-            self.newLine()
+        pretty = beautify_file(file, css_options)
 
-    def semicolon(self):
-        self.output.append(";")
+        if outfile == "stdout":
+            # python automatically converts newlines in text to "\r\n" when on windows
+            # switch to binary to prevent this
+            if sys.platform == "win32":
+                import msvcrt
 
-    def comment(self, comment):
-        self.output.append(comment)
+                msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
 
-    def newLine(self, keepWhitespace=False):
-        if len(self.output) > 0 :
-            if not keepWhitespace and self.output[-1] != '\n':
-                self.trim()
-            elif self.output[-1] == self.baseIndentString:
-                self.output.pop()
-
-            self.output.append("\n")
-
-            if len(self.baseIndentString) > 0:
-                self.output.append(self.baseIndentString)
-
-    def trim(self):
-        while self.__lastCharWhitespace():
-            self.output.pop()
-
-    def singleSpace(self):
-        if len(self.output) > 0 and not self.__lastCharWhitespace():
-            self.output.append(" ")
-
-    def preserveSingleSpace(self,isAfterSpace):
-        if isAfterSpace:
-            self.singleSpace()
-
-    def result(self):
-        if self.baseIndentString:
-            return self.baseIndentString + "".join(self.output);
+            sys.stdout.write(pretty)
         else:
-            return "".join(self.output)
+            if isFileDifferent(outfile, pretty):
+                mkdir_p(os.path.dirname(outfile))
 
+                # python automatically converts newlines in text to "\r\n" when on windows
+                # set newline to empty to prevent this
+                with io.open(outfile, "wt", newline="") as f:
+                    print("writing " + outfile, file=sys.stderr)
+                    try:
+                        f.write(pretty)
+                    except TypeError:
+                        # This is not pretty, but given how we did the version import
+                        # it is the only way to do this without having setup.py
+                        # fail on a missing six dependency.
+                        six = __import__("six")
+                        f.write(six.u(pretty))
 
-class Beautifier:
+    except Exception as ex:
+        print(ex, file=sys.stderr)
+        return 1
 
-    def __init__(self, source_text, opts=default_options()):
-        # This is not pretty, but given how we did the version import
-        # it is the only way to do this without having setup.py fail on a missing six dependency.
-        self.six = __import__("six")
-
-        # in javascript, these two differ
-        # in python they are the same, different methods are called on them
-        self.lineBreak = re.compile(self.six.u("\r\n|[\n\r\u2028\u2029]"))
-        self.allLineBreaks = self.lineBreak
-
-        if not source_text:
-            source_text = ''
-
-        opts = opts.mergeOpts('css')
-
-        # Continue to accept deprecated option
-        opts.space_around_combinator = opts.space_around_combinator or opts.space_around_selector_separator
-
-        self.opts = opts
-        self.indentSize = opts.indent_size
-        self.indentChar = opts.indent_char
-        self.pos = -1
-        self.ch = None
-
-        if self.opts.indent_with_tabs:
-            self.indentChar = "\t"
-            self.indentSize = 1
-
-        if self.opts.eol == 'auto':
-            self.opts.eol = '\n'
-            if self.lineBreak.search(source_text or ''):
-                self.opts.eol = self.lineBreak.search(source_text).group()
-
-        self.opts.eol = self.opts.eol.replace('\\r', '\r').replace('\\n', '\n')
-
-        # HACK: newline parsing inconsistent. This brute force normalizes the input newlines.
-        self.source_text = re.sub(self.allLineBreaks, '\n', source_text)
-
-        # https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule
-        # also in CONDITIONAL_GROUP_RULE below
-        self.NESTED_AT_RULE = [ \
-            "@page", \
-            "@font-face", \
-            "@keyframes", \
-            "@media", \
-            "@supports", \
-            "@document"]
-        self.CONDITIONAL_GROUP_RULE = [ \
-            "@media", \
-            "@supports", \
-            "@document"]
-
-        m = re.search("^[\t ]*", self.source_text)
-        baseIndentString = m.group(0)
-        self.printer = Printer(self, self.indentChar, self.indentSize, baseIndentString)
-
-    def next(self):
-        self.pos = self.pos + 1
-        if self.pos < len(self.source_text):
-            self.ch = self.source_text[self.pos]
-        else:
-            self.ch = ''
-        return self.ch
-
-    def peek(self,skipWhitespace=False):
-        start = self.pos
-        if skipWhitespace:
-            self.eatWhitespace()
-        result = ""
-        if self.pos + 1 < len(self.source_text):
-            result = self.source_text[self.pos + 1]
-        if skipWhitespace:
-            self.pos = start - 1
-            self.next()
-
-        return result
-
-    def eatString(self, endChars):
-        start = self.pos
-        while self.next():
-            if self.ch == "\\":
-                self.next()
-            elif self.ch in endChars:
-                break
-            elif self.ch == "\n":
-                break
-        return self.source_text[start:self.pos] + self.ch
-
-    def peekString(self, endChar):
-        start = self.pos
-        st = self.eatString(endChar)
-        self.pos = start - 1
-        self.next()
-        return st
-
-    def eatWhitespace(self, pn=False):
-        result = 0
-        while WHITE_RE.search(self.peek()) is not None:
-            self.next()
-            if self.ch == "\n" and pn and self.opts.preserve_newlines:
-                self.printer.newLine(True)
-                result += 1
-        self.newlines_from_last_ws_eat = result
-        return result
-
-    def skipWhitespace(self):
-        result = ''
-        if self.ch and WHITE_RE.search(self.ch):
-            result = self.ch
-
-        while WHITE_RE.search(self.next()) is not None:
-            result += self.ch
-        return result
-
-    def eatComment(self):
-        start = self.pos
-        singleLine = self.peek() == "/"
-        self.next()
-        while self.next():
-            if not singleLine and self.ch == "*" and self.peek() == "/":
-                self.next()
-                break
-            elif singleLine and self.ch == "\n":
-                return self.source_text[start:self.pos]
-        return self.source_text[start:self.pos] + self.ch
-
-    def lookBack(self, string):
-        past = self.source_text[self.pos - len(string):self.pos]
-        return past.lower() == string
-
-    # Nested pseudo-class if we are insideRule
-    # and the next special character found opens
-    # a new block
-    def foundNestedPseudoClass(self):
-        i = self.pos + 1
-        openParen = 0
-        while i < len(self.source_text):
-            ch = self.source_text[i]
-            if ch == "{":
-                return True
-            elif ch == "(":
-                # pseudoclasses can contain ()
-                openParen += 1
-            elif ch == ")":
-                if openParen == 0:
-                    return False
-                openParen -= 1
-            elif ch == ";" or ch == "}":
-                return False
-            i += 1;
-
-        return False
-
-    def beautify(self):
-        printer = self.printer
-        insideRule = False
-        insidePropertyValue = False
-        enteringConditionalGroup = False
-        top_ch = ''
-        last_top_ch = ''
-        parenLevel = 0
-
-        while True:
-            whitespace = self.skipWhitespace()
-            isAfterSpace = whitespace != ''
-            isAfterNewline = '\n' in whitespace
-            last_top_ch = top_ch
-            top_ch = self.ch
-
-            if not self.ch:
-                break
-            elif self.ch == '/' and self.peek() == '*':
-                header = printer.indentLevel == 0
-
-                if not isAfterNewline or header:
-                    printer.newLine()
-
-
-                comment = self.eatComment()
-                printer.comment(comment)
-                printer.newLine()
-                if header:
-                    printer.newLine(True)
-            elif self.ch == '/' and self.peek() == '/':
-                if not isAfterNewline and last_top_ch != '{':
-                    printer.trim()
-
-                printer.singleSpace()
-                printer.comment(self.eatComment())
-                printer.newLine()
-            elif self.ch == '@':
-                printer.preserveSingleSpace(isAfterSpace)
-
-                # deal with less propery mixins @{...}
-                if self.peek(True) == '{':
-                    printer.push(self.eatString('}'));
-                else:
-                    printer.push(self.ch)
-                    # strip trailing space, if present, for hash property check
-                    variableOrRule = self.peekString(": ,;{}()[]/='\"")
-
-                    if variableOrRule[-1] in ": ":
-                        # wwe have a variable or pseudo-class, add it and insert one space before continuing
-                        self.next()
-                        variableOrRule = self.eatString(": ")
-                        if variableOrRule[-1].isspace():
-                            variableOrRule = variableOrRule[:-1]
-                        printer.push(variableOrRule)
-                        printer.singleSpace();
-
-                    if variableOrRule[-1].isspace():
-                        variableOrRule = variableOrRule[:-1]
-
-                    # might be a nesting at-rule
-                    if variableOrRule in self.NESTED_AT_RULE:
-                        printer.nestedLevel += 1
-                        if variableOrRule in self.CONDITIONAL_GROUP_RULE:
-                            enteringConditionalGroup = True
-            elif self.ch == '#' and self.peek() == '{':
-                printer.preserveSingleSpace(isAfterSpace)
-                printer.push(self.eatString('}'));
-            elif self.ch == '{':
-                if self.peek(True) == '}':
-                    self.eatWhitespace()
-                    self.next()
-                    printer.singleSpace()
-                    printer.push("{")
-                    printer.closeBracket(False)
-                    if self.newlines_from_last_ws_eat < 2 and self.opts.newline_between_rules and printer.indentLevel == 0:
-                        printer.newLine(True)
-                else:
-                    printer.indent()
-                    printer.openBracket()
-                    # when entering conditional groups, only rulesets are allowed
-                    if enteringConditionalGroup:
-                        enteringConditionalGroup = False
-                        insideRule = printer.indentLevel > printer.nestedLevel
-                    else:
-                        # otherwise, declarations are also allowed
-                        insideRule = printer.indentLevel >= printer.nestedLevel
-            elif self.ch == '}':
-                printer.outdent()
-                printer.closeBracket(True)
-                insideRule = False
-                insidePropertyValue = False
-                if printer.nestedLevel:
-                    printer.nestedLevel -= 1
-                if self.newlines_from_last_ws_eat < 2 and self.opts.newline_between_rules and printer.indentLevel == 0:
-                    printer.newLine(True)
-            elif self.ch == ":":
-                self.eatWhitespace()
-                if (insideRule or enteringConditionalGroup) and \
-                        not (self.lookBack('&') or self.foundNestedPseudoClass()) and \
-                        not self.lookBack('('):
-                    # 'property: value' delimiter
-                    # which could be in a conditional group query
-                    printer.push(":")
-                    if not insidePropertyValue:
-                        insidePropertyValue = True
-                        printer.singleSpace()
-                else:
-                    # sass/less parent reference don't use a space
-                    # sass nested pseudo-class don't use a space
-
-                    # preserve space before pseudoclasses/pseudoelements, as it means "in any child"
-                    if (self.lookBack(' ')) and (printer.output[-1] != ' '):
-                        printer.push(" ")
-                    if self.peek() == ":":
-                        # pseudo-element
-                        self.next()
-                        printer.push("::")
-                    else:
-                        # pseudo-element
-                        printer.push(":")
-            elif self.ch == '"' or self.ch == '\'':
-                printer.preserveSingleSpace(isAfterSpace)
-                printer.push(self.eatString(self.ch))
-            elif self.ch == ';':
-                insidePropertyValue = False
-                printer.semicolon()
-                if self.eatWhitespace(True) == 0:
-                    printer.newLine()
-            elif self.ch == '(':
-                # may be a url
-                if self.lookBack("url"):
-                    printer.push(self.ch)
-                    self.eatWhitespace()
-                    if self.next():
-                        if self.ch is not ')' and self.ch is not '"' \
-                        and self.ch is not '\'':
-                            printer.push(self.eatString(')'))
-                        else:
-                            self.pos = self.pos - 1
-                else:
-                    parenLevel += 1
-                    printer.preserveSingleSpace(isAfterSpace)
-                    printer.push(self.ch)
-                    self.eatWhitespace()
-            elif self.ch == ')':
-                printer.push(self.ch)
-                parenLevel -= 1
-            elif self.ch == ',':
-                printer.push(self.ch)
-                if self.eatWhitespace(True) == 0 and not insidePropertyValue and self.opts.selector_separator_newline and parenLevel < 1:
-                    printer.newLine()
-                else:
-                    printer.singleSpace()
-            elif (self.ch == '>' or self.ch == '+' or self.ch == '~') and \
-                not insidePropertyValue and parenLevel < 1:
-                # handle combinator spacing
-                if self.opts.space_around_combinator:
-                    printer.singleSpace()
-                    printer.push(self.ch)
-                    printer.singleSpace()
-                else:
-                    printer.push(self.ch)
-                    self.eatWhitespace()
-                    # squash extra whitespace
-                    if self.ch and WHITE_RE.search(self.ch):
-                        self.ch = ''
-            elif self.ch == ']':
-                printer.push(self.ch)
-            elif self.ch == '[':
-                printer.preserveSingleSpace(isAfterSpace)
-                printer.push(self.ch)
-            elif self.ch == '=':
-                # no whitespace before or after
-                self.eatWhitespace()
-                printer.push('=')
-                if WHITE_RE.search(self.ch):
-                    self.ch = ''
-            else:
-                printer.preserveSingleSpace(isAfterSpace)
-                printer.push(self.ch)
-
-        sweet_code = re.sub('[\r\n\t ]+$', '', printer.result())
-
-        # establish end_with_newline
-        if self.opts.end_with_newline:
-            sweet_code += '\n'
-
-        if not self.opts.eol == '\n':
-            sweet_code = sweet_code.replace('\n', self.opts.eol)
-
-        return sweet_code
+    # Success
+    return 0
