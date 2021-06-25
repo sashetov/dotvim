@@ -206,17 +206,18 @@ map <F8> :tabn<CR>
 map <F2> :call DoSyntaxFolds()<CR>
 map <F3> :call DoManualFolds()<CR>
 vnoremap <buffer> <c-f> :call RangeJsBeautify()<cr>
-"DISPLAY OPTS: SET nu,cc,nowrap,list,expandtab,tabstop,shiftwidth,nocindent,nosmartindent,noautoindent,filetype indent on
+"DISPLAY OPTS: SET nu,cc,nowrap,list,expandtab,tabstop,shiftwidth,nocindent,nosmartindent,noautoindent,filetype indent on, hls
 set nu
 set cc=80
 set nowrap
 set list
 set expandtab
-set tabstop=4
-set shiftwidth=4
+set tabstop=2
+set shiftwidth=2
 set nocindent
 set nosmartindent
 set noautoindent
+set hls
 filetype indent on
 "SY on
 sy on
@@ -266,3 +267,4 @@ let g:ft_man_folding_enable=1
 runtime ftplugin/man.vim
 " status line
 :call InitStatusLine()
+:call DoManualFolds()
