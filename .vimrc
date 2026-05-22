@@ -1,7 +1,7 @@
-":version ":SET all ":HELP options.txt ".vimrc:
-"COMMAND! VimColorTest 
-command! VimColorTest call VimColorTest('/tmp/vimctest',25, 25)
-"SET ttyfast,termencoding,encoding,ttymouse,t_Co,scroll,ma,guicursor,fileencoding,fileencodings,backspace
+let mapleader = ' '
+let maplocalleader = ' '
+
+call plug#begin()
 set ttyfast
 set termencoding=utf-8
 set encoding=utf-8
@@ -11,260 +11,274 @@ set t_Co=256
 set scroll=10
 set ma
 set guicursor=n-v-c:block-Cursor/lCursor,ve:ver35-Cursor,o:hor50-Cursor,i-ci:ver25-Cursor/lCursor,r-cr:hor20-Cursor/lCursor,sm:block-Cursor-blinkwait175-blinkoff150-blinkon175,a:blinkon0
-set guicursor=
 set fileencoding=utf-8
-set fileencodings=ucs-bom,utf-8,latin1
 set backspace=indent,eol,start
-"FUN! DoManualFolds DoSyntaxFolds
-fun! DoSyntaxFolds()
-  set foldenable
-  set foldcolumn=1
-  set foldmethod=syntax
-  set foldlevelstart=0
-  set foldlevel=99
-  augroup javascript_folding
-    au!
-    au FileType javascript setglobal foldmethod=syntax
-  au
-  let g:javascript_fold=1    "javascript
-  let g:javaScript_fold=0    "javaScript
-  let g:perl_fold=1          "Perl
-  let g:php_folding=2        "PHP
-  let g:php_sync_method=0
-  let g:php_baselib=1
-  let g:r_syntax_folding=1   "R
-  let g:ruby_fold=1          "Ruby
-  let g:sh_fold_enabled=1    "sh
-  let g:vimsyn_folding='af'  "Vim script
-  let g:xml_syntax_folding=1 "XML
-endf
-fun! DoManualFolds()
-  set nofoldenable
-  set foldenable
-  set foldcolumn=1
-  let g:foldColumn=1
-  set foldmethod=manual
-endf
-"FUN! InitStatusLine ChangeStatuslineColor FileSize ReadOnly GitInfo
-fun! InitStatusLine()
-  let g:currentmode={
-  \ 'n'  : 'N ',
-  \ 'no' : 'N·Operator Pending ',
-  \ 'v'  : 'V ',
-  \ 'V'  : 'V·Line ',
-  \ '^V' : 'V·Block ',
-  \ 's'  : 'Select ',
-  \ 'S'  : 'S·Line ',
-  \ '^S' : 'S·Block ',
-  \ 'i'  : 'I ',
-  \ 'R'  : 'R ',
-  \ 'Rv' : 'V·Replace ',
-  \ 'c'  : 'Command ',
-  \ 'cv' : 'Vim Ex ',
-  \ 'ce' : 'Ex ',
-  \ 'r'  : 'Prompt ',
-  \ 'rm' : 'More ',
-  \ 'r?' : 'Confirm ',
-  \ '!'  : 'Shell ',
-  \ 't'  : 'Terminal '
-  \}
-  set laststatus=2
-  set statusline=
-  set statusline+=%{ChangeStatuslineColor()}
-  set statusline+=%0*\ %{toupper(g:currentmode[mode()])}
-  set statusline+=%8*\ [%n]
-  set statusline+=%8*\ %{GitInfo()}
-  set statusline+=%8*\ %<%F\ %{ReadOnly()}\ %m\ %w\
-  set statusline+=%#warningmsg#
-  set statusline+=%{SyntasticStatuslineFlag()}
-  set statusline+=%*
-  set statusline+=%9*\ %=
-  set statusline+=%8*\ %y\
-  set statusline+=%7*\ %{(&fenc!=''?&fenc:&enc)}\[%{&ff}]\
-  set statusline+=%8*\ %-3(%{FileSize()}%)
-  set statusline+=%0*\ %3p%%\ \ %l:\ %3c\
-  hi User1 ctermfg=15 ctermbg=20
-  hi User2 ctermfg=15 ctermbg=20
-  hi User3 ctermfg=15 ctermbg=20
-  hi User4 ctermfg=15 ctermbg=20
-  hi User5 ctermfg=15 ctermbg=20
-  hi User7 ctermfg=15 ctermbg=20
-  hi User8 ctermfg=15 ctermbg=20
-  hi User9 ctermfg=15 ctermbg=20
-endf
-fun! ChangeStatuslineColor()
-  if (mode() =~# '\v(n|no)')
-    exe 'hi! StatusLine ctermfg=001 ctermbg=20'
-  elseif (mode() =~# '\v(v|V)' || g:currentmode[mode()] ==# 'V·Block' || get(g:currentmode, mode(), '') ==# 't')
-    exe 'hi! StatusLine ctermfg=005 ctermbg=16'
-  elseif (mode() ==# 'i')
-    exe 'hi! StatusLine ctermfg=004 ctermbg=16'
-  else
-    exe 'hi! StatusLine ctermfg=006 ctermbg=16'
-  endif
-  return ''
-endf
-fun! FileSize()
-  let bytes = getfsize(expand('%:p'))
-  if (bytes >= 1024)
-    let kbytes = bytes / 1024
-  endif
-  if (exists('kbytes') && kbytes >= 1000)
-    let mbytes = kbytes / 1000
-  endif
-  if bytes <= 0
-    return '0'
-  endif
-  if (exists('mbytes'))
-    return mbytes . 'MB '
-  elseif (exists('kbytes'))
-    return kbytes . 'KB '
-  else
-    return bytes . 'B '
-  endif
-endf
-fun! ReadOnly()
-  if &readonly || !&modifiable
-    return ''
-  else
-    return ''
-endf
-fun! GitInfo()
-  execute '!git status . expand('%:p') . | head -c 10 && git branch '. expand('%:p') . ' | head -c 10 '
-endf
-"FUN! TabMessage PuppetValidateAndLintCurrentBuffer
-fun! TabMessage(cmd)
-  redir => message
-  silent execute a:cmd
-  redir END
-  if empty(message)
-    echoerr "no output"
-  else
-    tabnew
-    setlocal buftype=nofile bufhidden=wipe noswapfile
-    silent put=message
-  endif
-endf
-fun! PuppetValidateAndLintCurrentBuffer()
-  execute '!puppet-lint ' . expand('%:p') .' && puppet parser validate '. expand('%:p')
-endf
-"FUN! AirlinieThemePatch
-function! AirlineThemePatch(palette)
-  if g:airline_theme == 'hybrid'
-    for colors in values(a:palette.inactive)
-      let colors[3] = 245
-    endfor
-  endif
-endfunction
-"LET {g,w}:airline_* SET laststatus tm
 set laststatus=2
-set tm=40 "Þ∥Ξ¶␊»«Ꞩ
-let g:airline_left_sep='>'
-let g:airline_right_sep='<'
-let g:airline_left_alt_sep = '▶'
-let g:airline_right_alt_sep = '◀'
-let g:airline_detect_modified=1
-let g:airline_detect_paste=1
-let g:airline_detect_crypt=1
-let g:airline_detect_spell=1
-let g:airline_detect_iminsert=0
-let g:airline_inactive_collapse=0
-let g:airline_theme='badcat'
-let g:airline_theme_patch_func = 'AirlineThemePatch'
-let g:airline_powerline_fonts = 1
-let g:airline_symbols_ascii = 1
-let g:airline_mode_map = {
-    \ '__' : '-',
-    \ 'n'  : 'N',
-    \ 'i'  : 'I',
-    \ 'R'  : 'R',
-    \ 'c'  : 'C',
-    \ 'v'  : 'V',
-    \ 'V'  : 'V',
-    \ '' : 'V',
-    \ 's'  : 'S',
-    \ 'S'  : 'S',
-    \ '' : 'S',
-    \ }
-let g:airline_exclude_preview = 0
-let w:airline_disabled = 0
-let g:airline_skip_empty_sections = 0
-let w:airline_skip_empty_sections = 0
-if !exists('g:airline_symbols')     
-  let g:airline_symbols = {}
-  let g:airline_symbols.crypt = '🔒'
-  let g:airline_symbols.linenr = '␤'    
-  let g:airline_symbols.maxlinenr = '☰'
-  let g:airline_symbols.branch = '⎇'
-  let g:airline_symbols.paste = 'ρ'
-  let g:airline_symbols.notexists = '∄' 
-  let g:airline_symbols.readonly = ''
-endif
-"MAP f7 f8 f2 f3 VNOREMAP c-f
-map <F7> :tabp<CR>
-map <F8> :tabn<CR>
-map <F2> :call DoSyntaxFolds()<CR>
-map <F3> :call DoManualFolds()<CR>
-vnoremap <buffer> <c-f> :call RangeJsBeautify()<cr>
-"DISPLAY OPTS: SET nu,cc,nowrap,list,expandtab,tabstop,shiftwidth,nocindent,nosmartindent,noautoindent,filetype indent on, hls
+set tm=40
+noremap <F7> :tabp<CR>
+noremap <F8> :tabn<CR>
+vnoremap <leader>y :w !xclip -sel clip -i > /dev/null<CR><CR>
+set timeoutlen=3000
+set updatetime=300
 set nu
 set cc=80
 set nowrap
 set list
 set expandtab
-set tabstop=2
-set shiftwidth=2
+set tabstop=4
+set shiftwidth=4
 set nocindent
 set nosmartindent
 set noautoindent
 set hls
+filetype on
 filetype indent on
-"SY on
 sy on
-"SET splitright splitbelow
 set splitright
 set splitbelow
-"SET tabpagemax
 set tabpagemax=100
-"SET cscopeprg
 set cscopeprg=/usr/bin/cscope
-"SET g:html_*
-:let g:html_ingore_folding=0
-:let g:html_use_css=1
-:let g:html_dynamic_folds=1
-:let g:html_hover_unfold=1
-:let g:html_use_css=1
-:let g:html_number_lines = 0
-:let g:html_no_progress = 1
-:let g:html_diff_one_file = 1
-"SET g:nerdtree_tabs_*
-let g:nerdtree_tabs_open_on_gui_startup = 0
-let g:nerdtree_tabs_open_on_console_startup = 0
-let g:nerdtree_tabs_no_startup_for_diff = 1
-let g:nerdtree_tabs_smart_startup_focus = 1
-let g:nerdtree_tabs_open_on_new_tab = 0
-let g:nerdtree_tabs_meaningful_tab_names = 1
-let g:nerdtree_tabs_autoclose = 1
-let g:nerdtree_tabs_synchronize_view = 0
-let g:nerdtree_tabs_synchronize_focus = 0
-let g:nerdtree_tabs_focus_on_files = 0
-"LET h:ycm_global_ycm_extra_conf
-let g:ycm_global_ycm_extra_conf='~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
-"SET directory
 set directory=$HOME/.vim/swapfiles/
-"EXECUTE pathogen#infect IF empty LET $MANWIDTH g:ft_man_folding_enable RUNTIME ftplugin/man.vim :CALL InitStatusLine DoManualFolds
-execute pathogen#infect()
-"COLORSCHEME
-colorscheme darkblack
-colorscheme sasho
-"PYTHON interpreter
-let g:syntastic_python_python_exec = 'python3'
-"MANPAGER
-if empty($MANWIDTH)
-  let $MANWIDTH = 460
-endif
-let g:ft_man_folding_enable=1
-runtime ftplugin/man.vim
-" status line
-:call InitStatusLine()
-:call DoManualFolds()
+set foldcolumn=5
+set guioptions=
+set belloff=all
+set diffopt+=algorithm:histogram,indent-heuristic,vertical,internal
+set fillchars+=diff:\
+"colorscheme koehler
+"colorscheme habamax
+colorscheme zaibatsu
+let g:loaded_manpager = 1
+let g:loaded_matchparen = 1
+
+" --- core LSP / completion ---
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'neoclide/coc-yaml'
+Plug 'fannheyward/coc-marketplace'
+
+" --- nav, git, ergonomics ---
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-rhubarb'
+Plug 'tpope/vim-surround'
+Plug 'tpope/vim-commentary'
+Plug 'tpope/vim-repeat'
+Plug 'justinmk/vim-sneak'
+Plug 'junegunn/vim-easy-align'
+Plug 'airblade/vim-gitgutter'
+Plug 'airblade/vim-rooter'
+Plug 'mbbill/undotree'
+Plug 'vim-test/vim-test'
+Plug 'preservim/nerdtree'
+Plug 'itchyny/lightline.vim'
+Plug 'editorconfig/editorconfig-vim'
+Plug 'machakann/vim-highlightedyank'
+
+" --- broad syntax / filetype coverage ---
+Plug 'sheerun/vim-polyglot'
+
+" --- coc extensions, auto-installed on first start ---
+let g:coc_global_extensions = [
+      \ 'coc-marketplace',
+      \ 'coc-snippets',
+      \ 'coc-pairs',
+      \ 'coc-json',
+      \ 'coc-yaml',
+      \ 'coc-xml',
+      \ 'coc-toml',
+      \ 'coc-html',
+      \ 'coc-css',
+      \ 'coc-tsserver',
+      \ 'coc-eslint',
+      \ 'coc-prettier',
+      \ 'coc-pyright',
+      \ 'coc-go',
+      \ 'coc-rust-analyzer',
+      \ 'coc-clangd',
+      \ 'coc-sh',
+      \ 'coc-vimlsp',
+      \ 'coc-java',
+      \ 'coc-kotlin',
+      \ 'coc-docker',
+      \ 'coc-sumneko-lua',
+      \ 'coc-markdownlint',
+      \ 'coc-webpack',
+      \ 'coc-perl',
+      \ 'coc-powershell',
+      \ ]
+
+" --- fzf mappings ---
+nnoremap <silent> <C-p>      :Files<CR>
+nnoremap <silent> <leader>f  :Files<CR>
+nnoremap <silent> <leader>b  :Buffers<CR>
+nnoremap <silent> <leader>g  :GFiles<CR>
+nnoremap <silent> <leader>r  :Rg<CR>
+nnoremap <silent> <leader>rg :Rg<CR>
+nnoremap <silent> <leader>l  :BLines<CR>
+nnoremap <silent> <leader>L  :Lines<CR>
+nnoremap <silent> <leader>h  :History<CR>
+nnoremap <silent> <leader>c  :Commits<CR>
+nnoremap <silent> <leader>*  :Rg <C-r><C-w><CR>
+
+" --- fugitive / rhubarb ---
+nnoremap <silent> <leader>gs :Git<CR>
+nnoremap <silent> <leader>gd :Gdiffsplit<CR>
+nnoremap <silent> <leader>gD :Gdiffsplit!<CR>
+nnoremap <silent> <leader>gb :Git blame<CR>
+nnoremap <silent> <leader>gl :0Gclog<CR>
+nnoremap <silent> <leader>go :GBrowse<CR>
+vnoremap <silent> <leader>go :GBrowse<CR>
+
+" --- misc plugin mappings ---
+nnoremap <silent> <leader>u  :UndotreeToggle<CR>
+nnoremap <silent> <leader>n  :NERDTreeToggle<CR>
+nnoremap <silent> <leader>F  :NERDTreeFind<CR>
+xmap     ga                  <Plug>(EasyAlign)
+nmap     ga                  <Plug>(EasyAlign)
+
+let g:sneak#label        = 1
+let g:gitgutter_map_keys = 0
+let g:gitgutter_max_signs = 2000
+let g:NERDTreeShowHidden = 1
+let g:NERDTreeMinimalUI  = 1
+let g:rooter_patterns    = ['.git', 'package.json', 'go.mod', 'Cargo.toml', 'build.gradle', 'build.gradle.kts', 'pyproject.toml', 'composer.json', 'Gemfile', 'pom.xml', 'mix.exs', 'project.clj', 'deps.edn', 'flake.nix', 'shell.nix', 'main.tf', 'Chart.yaml']
+let g:rooter_silent_chdir = 1
+
+" --- coc: docs, nav, diagnostics, refactor ---
+nnoremap <silent> K :call <SID>show_documentation()<CR>
+function! s:show_documentation()
+  if (index(['vim','help'], &filetype) >= 0)
+    execute 'h '.expand('<cword>')
+  else
+    call CocAction('doHover')
+  endif
+endfunction
+
+autocmd CursorHold * silent call CocActionAsync('highlight')
+
+nnoremap <silent> gd :call CocAction('jumpDefinition')<CR>
+nnoremap <silent> gD :call CocAction('jumpDeclaration')<CR>
+nnoremap <silent> gt :call CocAction('jumpTypeDefinition')<CR>
+nnoremap <silent> gi :call CocAction('jumpImplementation')<CR>
+nnoremap <silent> gr :call CocAction('jumpReferences')<CR>
+nnoremap <silent> <leader>ca :call CocAction('codeAction')<CR>
+vnoremap <silent> <leader>ca :call CocAction('codeAction')<CR>
+nnoremap <silent> <leader>rn :call CocActionAsync('rename')<CR>
+inoremap <silent> <C-s>     <C-o>:call CocActionAsync('showSignatureHelp')<CR>
+
+nmap <silent> ]g <Plug>(coc-diagnostic-next)
+nmap <silent> [g <Plug>(coc-diagnostic-prev)
+nnoremap <silent> <leader>d :CocDiagnostics<CR>
+nnoremap <silent> <leader>q :call CocAction('diagnosticLineList')<CR>
+
+let g:vimimprove_prewarm_files = {
+\ 'terraform':  expand('~/.vim/lsp-prewarm/prewarm.tf'),
+\ 'helm':       expand('~/.vim/lsp-prewarm/templates/_helpers.tpl'),
+\ 'clojure':    expand('~/.vim/lsp-prewarm/prewarm.clj'),
+\ 'sql':        expand('~/.vim/lsp-prewarm/prewarm.sql'),
+\ 'markdown':   expand('~/.vim/lsp-prewarm/prewarm.md'),
+\ 'go':         expand('~/.vim/lsp-prewarm/prewarm.go'),
+\ 'python':     expand('~/.vim/lsp-prewarm/prewarm.py'),
+\ 'cs':         expand('~/.vim/lsp-prewarm/prewarm.cs'),
+\ 'yaml':       expand('~/.vim/lsp-prewarm/prewarm.yaml'),
+\ 'json':       expand('~/.vim/lsp-prewarm/prewarm.json'),
+\ 'scss':       expand('~/.vim/lsp-prewarm/prewarm.scss'),
+\ 'xml':        expand('~/.vim/lsp-prewarm/prewarm.xml'),
+\ 'rust':       expand('~/.vim/lsp-prewarm/prewarm.rs'),
+\ 'c':          expand('~/.vim/lsp-prewarm/prewarm.c'),
+\ 'cpp':        expand('~/.vim/lsp-prewarm/prewarm.cpp'),
+\ 'javascript': expand('~/.vim/lsp-prewarm/prewarm.js'),
+\ 'typescript': expand('~/.vim/lsp-prewarm/prewarm.ts'),
+\ 'sh':         expand('~/.vim/lsp-prewarm/prewarm.sh'),
+\ 'lua':        expand('~/.vim/lsp-prewarm/prewarm.lua'),
+\ 'php':        expand('~/.vim/lsp-prewarm/prewarm.php'),
+\ 'ruby':       expand('~/.vim/lsp-prewarm/prewarm.rb'),
+\ 'java':       expand('~/.vim/lsp-prewarm/prewarm.java'),
+\ 'kotlin':     expand('~/.vim/lsp-prewarm/prewarm.kt'),
+\ 'nix':        expand('~/.vim/lsp-prewarm/prewarm.nix'),
+\ 'toml':       expand('~/.vim/lsp-prewarm/prewarm.toml'),
+\ 'dockerfile': expand('~/.vim/lsp-prewarm/Dockerfile'),
+\}
+
+" Markers (in cwd or any parent up to $HOME) → filetype to prewarm.
+" Filetypes without a marker here (markdown/yaml/json/sql/xml/scss/toml/sh/lua)
+" are cheap to start cold and skipped from prewarm entirely.
+let g:vimimprove_prewarm_markers = {
+\ 'rust':       ['Cargo.toml'],
+\ 'go':         ['go.mod', 'go.sum'],
+\ 'python':     ['pyproject.toml', 'requirements.txt', 'setup.py', 'setup.cfg', 'Pipfile'],
+\ 'typescript': ['tsconfig.json'],
+\ 'javascript': ['package.json'],
+\ 'php':        ['composer.json'],
+\ 'ruby':       ['Gemfile', '*.gemspec'],
+\ 'terraform':  ['*.tf', '.terraform.lock.hcl'],
+\ 'helm':       ['Chart.yaml'],
+\ 'clojure':    ['project.clj', 'deps.edn', 'shadow-cljs.edn'],
+\ 'java':       ['pom.xml', 'build.gradle', 'build.gradle.kts', '*.java'],
+\ 'kotlin':     ['build.gradle.kts', 'settings.gradle.kts', '*.kt', '*.kts'],
+\ 'cs':         ['*.csproj', '*.sln', '*.fsproj'],
+\ 'cpp':        ['CMakeLists.txt', 'compile_commands.json', '*.cpp', '*.hpp', '*.cc'],
+\ 'c':          ['configure.ac', 'compile_commands.json', '*.c', '*.h'],
+\ 'dockerfile': ['Dockerfile', 'Containerfile'],
+\ 'nix':        ['flake.nix', 'default.nix', 'shell.nix'],
+\}
+
+function! s:VimImproveHasMarker(root, patterns) abort
+  let l:home = expand('~')
+  " Wildcard patterns (e.g. '*.cpp'): only check the cwd itself,
+  " and require a real file (skip directory names like 'llama.cpp/').
+  for l:pat in a:patterns
+    if l:pat =~# '\*'
+      for l:p in glob(a:root . '/' . l:pat, 1, 1)
+        if filereadable(l:p) | return 1 | endif
+      endfor
+    endif
+  endfor
+  " Exact-name patterns (e.g. 'Cargo.toml'): walk up toward $HOME.
+  let l:dir = a:root
+  while !empty(l:dir) && l:dir !=# '/' && l:dir !=# l:home
+    for l:pat in a:patterns
+      if l:pat !~# '\*' && filereadable(l:dir . '/' . l:pat)
+        return 1
+      endif
+    endfor
+    let l:parent = fnamemodify(l:dir, ':h')
+    if l:parent ==# l:dir | break | endif
+    let l:dir = l:parent
+  endwhile
+  return 0
+endfunction
+
+function! s:VimImproveDetectFiletypes() abort
+  let l:root = getcwd()
+  let l:detected = []
+  for [l:ft, l:patterns] in items(g:vimimprove_prewarm_markers)
+    if s:VimImproveHasMarker(l:root, l:patterns)
+      call add(l:detected, l:ft)
+    endif
+  endfor
+  return l:detected
+endfunction
+
+function! s:VimImprovePrewarmLSP() abort
+  let l:targets = s:VimImproveDetectFiletypes()
+  for ft in l:targets
+    let l:path = get(g:vimimprove_prewarm_files, ft, '')
+    if empty(l:path) || !filereadable(l:path) | continue | endif
+    let l:bnr = bufadd(l:path)
+    if l:bnr > 0
+      call bufload(l:bnr)
+      call setbufvar(l:bnr, '&buflisted', 0)
+      call setbufvar(l:bnr, '&swapfile', 0)
+      if ft ==# 'helm'
+        call setbufvar(l:bnr, '&filetype', 'helm')
+      endif
+    endif
+  endfor
+endfunction
+
+command! VimImprovePrewarmLSP            call s:VimImprovePrewarmLSP()
+command! VimImprovePrewarmShow           echo s:VimImproveDetectFiletypes()
+autocmd User CocNvimInit ++once call timer_start(800, {-> s:VimImprovePrewarmLSP()})
+
+call plug#end()

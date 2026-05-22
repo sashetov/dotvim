@@ -1,4 +1,32 @@
+# vim runtime
 .*.sw*
-ycm_core
 swapfiles/
-backup
+backup/
+.netrwhist
+sessions/
+
+# vim-plug installs
+plugged/
+autoload/plug.vim
+
+# old pathogen leftovers
+bundle/
+ycm_core
+
+# LSP / linter caches written into the repo dir
+.lsp/
+.clj-kondo/
+
+# Artifacts left by LSPs analyzing lsp-prewarm/ stub project files
+lsp-prewarm/.gradle/
+lsp-prewarm/.idea/
+lsp-prewarm/target/
+lsp-prewarm/Cargo.lock
+lsp-prewarm/.terraform/
+lsp-prewarm/__pycache__/
+lsp-prewarm/node_modules/
+lsp-prewarm/obj/
+lsp-prewarm/bin/
+
+# personal helpers / machine-specific
+push

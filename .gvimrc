@@ -1,6 +1,4 @@
 ".gvimrc "see :version :set all :help options.txt
-"infect with pathogen
-execute pathogen#infect()
 "color test functions
 function! GvimColorTest(outfile)
   let result = []

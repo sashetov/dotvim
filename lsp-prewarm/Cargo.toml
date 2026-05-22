@@ -1,0 +1,8 @@
+[package]
+name = "prewarm"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+name = "prewarm"
+path = "prewarm.rs"

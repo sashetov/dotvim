@@ -1,0 +1,86 @@
+{
+    "yaml.schemas": {
+        "kubernetes": [
+            "/*.yaml",
+            "/*.yml"
+        ]
+    },
+    "yaml.validate": true,
+    "yaml.completion": true,
+    "yaml.hover": true,
+    "yaml.customTags": [
+        "!And", "!And sequence", "!Base64", "!Base64 scalar", "!Cidr", "!Cidr sequence",
+        "!Equals", "!Equals sequence", "!GetAtt", "!GetAtt scalar", "!GetAZs", "!GetAZs scalar",
+        "!If", "!If sequence", "!ImportValue", "!ImportValue scalar", "!Join", "!Join sequence",
+        "!Not", "!Not sequence", "!Or", "!Or sequence", "!Select", "!Select sequence",
+        "!Split", "!Split sequence", "!Sub", "!Sub scalar", "!Transform", "!Transform map",
+        "!Ref", "!Ref scalar"
+    ],
+    "omnisharp.path": "~/.local/opt/omnisharp/omnisharp-launcher.sh",
+    "languageserver": {
+        "terraform": {
+            "command": "terraform-ls",
+            "args": ["serve"],
+            "filetypes": ["terraform", "tf"],
+            "initializationOptions": {},
+            "settings": {}
+        },
+        "helm": {
+            "command": "helm_ls",
+            "args": ["serve"],
+            "filetypes": ["helm", "helmfile"],
+            "rootPatterns": ["Chart.yaml"]
+        },
+        "clojure": {
+            "command": "clojure-lsp",
+            "filetypes": ["clojure", "edn"],
+            "rootPatterns": ["project.clj", "deps.edn", "shadow-cljs.edn", ".git"]
+        },
+        "sqls": {
+            "command": "sqls",
+            "filetypes": ["sql", "mysql", "tsql", "plsql", "psql"],
+            "rootPatterns": [".sqls/config.yml", ".git"]
+        },
+        "marksman": {
+            "command": "marksman",
+            "args": ["server"],
+            "filetypes": ["markdown"],
+            "rootPatterns": [".marksman.toml", ".git"]
+        },
+        "intelephense": {
+            "command": "intelephense",
+            "args": ["--stdio"],
+            "filetypes": ["php"],
+            "rootPatterns": ["composer.json", ".git"],
+            "initializationOptions": {
+                "storagePath": "/tmp/intelephense"
+            }
+        },
+        "solargraph": {
+            "command": "solargraph",
+            "args": ["stdio"],
+            "filetypes": ["ruby"],
+            "rootPatterns": ["Gemfile", ".solargraph.yml", ".git"],
+            "initializationOptions": {
+                "diagnostics": true
+            }
+        },
+        "kotlin": {
+            "command": "kotlin-language-server",
+            "filetypes": ["kotlin"],
+            "rootPatterns": ["build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts", "pom.xml", ".git"]
+        },
+        "taplo": {
+            "command": "taplo",
+            "args": ["lsp", "stdio"],
+            "filetypes": ["toml"],
+            "rootPatterns": ["taplo.toml", ".taplo.toml", ".git"]
+        },
+        "bash": {
+            "command": "bash-language-server",
+            "args": ["start"],
+            "filetypes": ["sh", "bash"],
+            "ignoredRootPaths": ["~"]
+        }
+    }
+}
